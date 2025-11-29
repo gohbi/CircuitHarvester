@@ -4,6 +4,7 @@ import { AnalysisState } from './types';
 import { analyzeCircuitBoard } from './services/geminiService';
 import CameraModal from './components/CameraModal';
 import AnalysisDisplay from './components/AnalysisDisplay';
+import AnnotatedImage from './components/AnnotatedImage';
 
 function App() {
   const [state, setState] = useState<AnalysisState>({
@@ -163,21 +164,20 @@ function App() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Image Preview (Sticky Sidebar on Desktop) */}
               <div className="lg:col-span-1">
-                <div className="sticky top-24 bg-slate-800 p-2 rounded-2xl border border-slate-700 shadow-xl">
+                <div className="sticky top-24">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Detected Components
+                  </h4>
                   {state.image && (
-                    <img 
-                      src={state.image} 
-                      alt="Analyzed Circuit" 
-                      className="w-full h-auto rounded-xl"
+                    <AnnotatedImage 
+                      imageSrc={state.image} 
+                      parts={state.result.parts} 
                     />
                   )}
-                  <div className="mt-4 px-2 pb-2">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Analysis Status</h4>
-                    <div className="flex items-center gap-2 text-emerald-400">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-sm font-medium">Complete</span>
-                    </div>
-                  </div>
+                  <p className="text-xs text-slate-500 mt-3 text-center">
+                    Hover over boxes to identify parts
+                  </p>
                 </div>
               </div>
 

@@ -4,6 +4,7 @@ export interface Part {
   description: string;
   harvestability: 'High' | 'Medium' | 'Low';
   projectIdeas: string[];
+  box_2d?: number[]; // [ymin, xmin, ymax, xmax] normalized to 1000
 }
 
 export interface AnalysisResult {

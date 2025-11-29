@@ -37,6 +37,11 @@ const analysisSchema: Schema = {
             items: { type: Type.STRING },
             description: "List of 2-3 cool project ideas for this harvested part.",
           },
+          box_2d: {
+            type: Type.ARRAY,
+            items: { type: Type.INTEGER },
+            description: "Bounding box of the component in the format [ymin, xmin, ymax, xmax] on a 0-1000 scale.",
+          },
         },
         required: ["name", "type", "description", "harvestability", "projectIdeas"],
       },
@@ -65,8 +70,8 @@ export const analyzeCircuitBoard = async (base64Image: string): Promise<Analysis
             Identify the device by reading visible labels on the PCB or chips. 
             List the most useful components that a hobbyist could harvest for their own projects.
             Provide specific project ideas for the harvested parts.
-            Be educational and inspire wonder about how it works.
-            Focus on identifying specific chips, motors, or sensors if visible.`,
+            For each identified component, provide a bounding box [ymin, xmin, ymax, xmax] (0-1000 scale) to locate it on the image.
+            Be educational and inspire wonder about how it works.`,
           },
         ],
       },

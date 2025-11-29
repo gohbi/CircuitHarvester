@@ -60,11 +60,21 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
           {result.parts.map((part, index) => (
             <div 
               key={index} 
-              className="group bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] flex flex-col h-full"
+              className="group bg-slate-800 border border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] flex flex-col h-full relative overflow-hidden"
             >
-              <div className="flex justify-between items-start mb-3">
-                <div className="bg-slate-900 rounded-lg p-2 border border-slate-700">
-                   <Zap className="w-5 h-5 text-cyan-400" />
+              {/* Index Number Watermark */}
+              <div className="absolute top-2 right-2 text-6xl font-bold text-slate-700/20 pointer-events-none select-none">
+                {index + 1}
+              </div>
+
+              <div className="flex justify-between items-start mb-3 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                    {index + 1}
+                  </div>
+                  <div className="bg-slate-900 rounded-lg p-2 border border-slate-700">
+                     <Zap className="w-4 h-4 text-cyan-400" />
+                  </div>
                 </div>
                 <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider
                   ${part.harvestability === 'High' ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-900' : 
@@ -74,16 +84,16 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
                 </span>
               </div>
               
-              <h4 className="text-xl font-bold text-white mb-1 group-hover:text-emerald-300 transition-colors">
+              <h4 className="text-xl font-bold text-white mb-1 group-hover:text-emerald-300 transition-colors relative z-10">
                 {part.name}
               </h4>
-              <p className="text-slate-400 text-xs font-mono mb-3">{part.type}</p>
+              <p className="text-slate-400 text-xs font-mono mb-3 relative z-10">{part.type}</p>
               
-              <p className="text-slate-300 text-sm mb-4 flex-grow">
+              <p className="text-slate-300 text-sm mb-4 flex-grow relative z-10">
                 {part.description}
               </p>
 
-              <div className="mt-auto pt-4 border-t border-slate-700/50">
+              <div className="mt-auto pt-4 border-t border-slate-700/50 relative z-10">
                 <div className="flex items-center gap-2 mb-2">
                   <Lightbulb className="w-4 h-4 text-amber-400" />
                   <span className="text-xs font-bold text-amber-400 uppercase">Project Ideas</span>
