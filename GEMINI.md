@@ -1,137 +1,156 @@
-# CircuitHarvester Backend & AI Research Architecture
+# CircuitHarvester Technical Documentation
 
-This document outlines the technical architecture required to implement the backend services, data persistence, and AI training pipeline for the CircuitHarvester application.
-
----
-
-## 1. System Overview
-
-The system consists of three main components:
-1.  **Client (React PWA)**: Captures images, uses Gemini API for initial labeling, and submits data to the backend.
-2.  **API Server (Backend)**: Authentication, data validation, storage management, and data set aggregation.
-3.  **Research Engine (AI)**: Automated pipeline to train custom computer vision models (e.g., YOLOv8) using the harvested images.
+## Project Overview
+**CircuitHarvester** is a computer vision application designed to empower makers, hobbyists, and engineers to "harvest" electronic components from old devices. By analyzing images of circuit boards, the app identifies components, provides technical specifications, suggests projects, and creates shopping lists for missing parts.
 
 ---
 
-## 2. Backend Implementation Guide
+# Phase 1: Current Architecture (v1.0)
 
-We recommend using **Python (FastAPI)** for the backend due to its native support for AI/ML libraries, or **Node.js (Express/NestJS)** if keeping a full JS stack is preferred.
+The current iteration allows for real-time analysis using Google's Gemini API and client-side persistence.
 
-### Recommended Stack
-*   **Language**: Python 3.10+ (FastAPI)
-*   **Database**: PostgreSQL (Metadata & Relational Data) + MongoDB (Flexible JSON Storage for Annotations)
-*   **Object Storage**: AWS S3 or Google Cloud Storage (for raw images)
-*   **Vector DB (Optional)**: Pinecone or Milvus (for visual similarity search)
+## 1. Tech Stack
+*   **Frontend Framework**: React 18 (ESM).
+*   **Styling**: Tailwind CSS (Utility-first styling for dark mode/responsive design).
+*   **Icons**: Lucide React.
+*   **Build/Runtime**: Browser-native ES Modules (No Webpack/Vite config required for this specific environment).
 
-### API Endpoints
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/login` | User authentication |
-| `POST` | `/api/v1/submissions` | Upload new image + Gemini analysis result |
-| `GET` | `/api/v1/submissions` | List user's past scans |
-| `PATCH` | `/api/v1/submissions/{id}` | Update labels (Human-in-the-loop correction) |
-| `POST` | `/api/v1/research/export` | Export dataset for training (COCO/YOLO format) |
+## 2. Core Services
+
+### A. AI Analysis Service (`services/geminiService.ts`)
+*   **Model**: `gemini-2.5-flash` via `@google/genai` SDK.
+*   **Input**: Base64 encoded JPEG/PNG.
+*   **Output Strategy**: Structured JSON generation via `responseSchema`.
+*   **Key Capabilities**:
+    *   Component Identification.
+    *   **Spatial Grounding**: Returns `box_2d` [ymin, xmin, ymax, xmax] coordinates (0-1000 scale) for overlay rendering.
+    *   Safety Warning generation based on board type.
+
+### B. Storage Service (`services/storageService.ts`)
+*   **Technology**: IndexedDB.
+*   **Database**: `CircuitHarvesterDB` (Store: `sessions`).
+*   **Function**: Persists the most recent scan state (image blob + analysis JSON).
+*   **Retention**: 1 Hour TTL (Time To Live) to prevent stale data accumulation.
+
+### C. Training Simulation (`services/trainingService.ts`)
+*   **Role**: Acts as a stub/interface for the future backend.
+*   **Current Behavior**: Creates a standardized JSON payload of the scan and simulates an upload delay.
+
+## 3. Key Components
+*   **`App.tsx`**: Main controller. Manages state transitions (Idle -> Scanning -> Analyzed).
+*   **`CameraModal.tsx`**: Handles `navigator.mediaDevices.getUserMedia` video stream, draws to canvas for capture, and applies a CSS-based scanning animation.
+*   **`AnnotatedImage.tsx`**: Renders the captured image and overlays interactive buttons based on the `box_2d` coordinates returned by Gemini.
+*   **`AnalysisDisplay.tsx`**: Renders the analysis results, manages the "Shopping List" state, and handles Export to DOCX/Print.
 
 ---
 
-## 3. Database Schema
+# Phase 2: Open Source Research Agent Roadmap (v2.0)
 
-### A. Users Table (PostgreSQL)
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    api_key_hash VARCHAR(255),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
+The next phase moves from a standalone tool to a connected **AI Research Agent**. This agent will aggregate data to group circuit boards by function and generate RAG-based project suggestions.
 
-### B. Submissions Table (PostgreSQL)
-```sql
-CREATE TABLE submissions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id),
-    image_url TEXT NOT NULL,
-    device_name VARCHAR(100),
-    status VARCHAR(20) DEFAULT 'unverified', -- unverified, verified, training_ready
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
+## 1. The Core Objective
 
-### C. Annotations Collection (MongoDB / JSONB in Postgres)
-Stores the bounding boxes and Gemini-generated metadata.
+The Research Agent acts as a central brain that:
+1.  **Learns**: Continuously improves by correlating scanned images with user questionnaire data.
+2.  **Groups**: Clusters circuit boards visually and functionally (e.g., "This looks like a router motherboard," "This is a 90s audio amplifier").
+3.  **Suggests**: Uses **RAG (Retrieval-Augmented Generation)** to look up what other users built with similar boards.
+
+## 2. The Open Source Stack
+
+To avoid vendor lock-in and maintain control over the research data, we will use the following state-of-the-art open-source stack:
+
+### A. The "Eyes" (Vision Encoder)
+**Model:** **LLaVA-Next (Large Language-and-Vision Assistant)** or **Qwen-VL-Chat**.
+*   **Role**: Extracts semantic meaning from the circuit board images. It doesn't just "see" a capacitor; it sees "a high-power audio section."
+*   **Why**: These models rival proprietary models in specific visual reasoning tasks and can be fine-tuned on custom hardware datasets.
+
+### B. The "Brain" (Reasoning & Orchestration)
+**Model:** **Meta Llama 3 (70B or 8B Instruct)**.
+*   **Role**: Takes the visual data + user questionnaire and performs the logic: "Given this is a router with a powerful MIPS processor, it could be repurposed as a home automation server (Intact) or harvested for its SMA connectors (Teardown)."
+*   **Serving**: Hosted via **vLLM** or **Ollama** for high-throughput inference on your own GPU server.
+
+### C. The "Memory" (Vector Database)
+**System:** **Qdrant** or **Milvus** (Open Source).
+*   **Role**: Stores "Embeddings" of every scanned board.
+*   **Function**: When a user uploads a board, the database performs a *Similarity Search* to find the 50 most similar boards ever scanned. This allows the system to say, "People who found this board usually built X."
+
+## 3. Data Collection Strategy
+
+To train this agent, we need to capture three data points from the frontend:
+
+1.  **The Raw Image**: High-res upload.
+2.  **The Automated Analysis**: The bounding boxes and labels generated by the initial scan (Phase 1).
+3.  **The User Intent (Questionnaire)**:
+    *   *Q1: "Do you plan to keep this device intact or tear it down?"*
+    *   *Q2: "What is your skill level? (Beginner/Hobbyist/Engineer)"*
+    *   *Q3: "What kind of project are you building? (Robot/IoT/Art)"*
+
+### Database Schema (Document Store + Vector)
+
 ```json
+// Collection: research_samples
 {
-  "submission_id": "uuid-string",
-  "gemini_prompt_version": "v1.2",
-  "parts": [
-    {
-      "label": "555 Timer IC",
-      "category": "Integrated Circuit",
-      "bbox_normalized": [100, 200, 150, 250], // [ymin, xmin, ymax, xmax]
-      "confidence_score": 0.95
-    }
-  ]
+  "_id": "uuid",
+  "image_path": "s3://bucket/training/img_123.jpg",
+  "user_intent": "teardown", // from Questionnaire
+  "user_skill": "beginner",   // from Questionnaire
+  "visual_embedding": [0.021, -0.99, ...], // 1536-dim vector from LLaVA
+  "detected_cluster": "consumer_router_v2",
+  "manual_labels": [ ... ] // If user corrected the AI
 }
 ```
 
----
+## 4. Implementation Roadmap
 
-## 4. AI Training Pipeline
+### Step 1: Backend Setup (Python/FastAPI)
+Create a Python microservice that wraps the models.
 
-To transition from general Gemini analysis to a specialized, low-latency computer vision model, follow this pipeline:
-
-### Step 1: Data Ingestion (The "Harvest")
-*   The React app uploads the image (`base64` -> `S3`) and the Gemini JSON result (`Database`).
-*   **Action**: `uploadTrainingData` function in `services/trainingService.ts` needs to point to the real API.
-
-### Step 2: Verification (Human-in-the-Loop)
-*   Before training, data must be cleaned.
-*   **Tool**: Build a simple admin dashboard (or use tools like Label Studio).
-*   **Process**:
-    1.  Fetch "unverified" submissions.
-    2.  Display image with Gemini's bounding boxes overlay.
-    3.  Human expert corrects boxes or labels.
-    4.  Mark submission as `training_ready`.
-
-### Step 3: Dataset Conversion
-Convert the stored data into standard formats (YOLO or COCO).
-
-**Python Script Example (YOLO Format):**
 ```python
-def export_for_yolo(submission):
-    # YOLO format: <class_id> <x_center> <y_center> <width> <height>
-    img_width, img_height = get_image_dims(submission.image_url)
+# pseudo_code_agent.py
+from qdrant_client import QdrantClient
+from llava.serve import run_model
+
+def analyze_and_store(image, user_survey):
+    # 1. Vision Analysis
+    vision_features = run_model(image)
     
-    with open(f"{submission.id}.txt", "w") as f:
-        for part in submission.annotations:
-            # Convert [ymin, xmin, ymax, xmax] (0-1000) to YOLO normalized center/width
-            y_min, x_min, y_max, x_max = part['bbox']
-            
-            w = (x_max - x_min) / 1000.0
-            h = (y_max - y_min) / 1000.0
-            x_center = (x_min / 1000.0) + (w / 2)
-            y_center = (y_min / 1000.0) + (h / 2)
-            
-            class_id = class_map[part['label']]
-            f.write(f"{class_id} {x_center} {y_center} {w} {h}\n")
+    # 2. Store in Vector DB
+    qdrant.upsert(
+        collection_name="circuit_boards",
+        points=[{
+            "vector": vision_features.embedding,
+            "payload": { "survey": user_survey }
+        }]
+    )
+    
+    # 3. Find Similar Boards
+    similar_boards = qdrant.search(
+        collection_name="circuit_boards",
+        query_vector=vision_features.embedding,
+        limit=5
+    )
+    
+    # 4. Generate Suggestions (Llama 3)
+    suggestion = llama3.generate(
+        prompt=f"User has board similar to {similar_boards}. Suggest a project."
+    )
+    
+    return suggestion
 ```
 
-### Step 4: Model Training (The "Research Agent")
-We recommend training a **YOLOv8** or **YOLOv11** model for real-time object detection on mobile devices.
+### Step 2: The Questionnaire (Frontend Update)
+Update the UI (`App.tsx` and `AnalysisDisplay.tsx`) to ask the user their intent *after* the scan is complete. This data becomes the "Ground Truth" for the agent.
 
-**Training Command (using Ultralytics):**
-```bash
-yolo task=detect mode=train model=yolov8n.pt data=custom_circuit_data.yaml epochs=100 imgsz=640
-```
+### Step 3: The "Clustering" Job
+Run a nightly job using **HDBSCAN** or **K-Means** on the Vector Database to discover new categories of devices automatically (e.g., "The system has discovered a new cluster: 'Vaping Pens'").
 
-### Step 5: Inference Deployment
-Once trained, the model can be deployed back to the app in two ways:
-1.  **Server-side**: Python API runs the model (High accuracy, network latency).
-2.  **Client-side (Edge)**: Export model to ONNX or TensorFlow.js and run directly in the browser.
+## 5. How to Run This Locally (Dev Environment)
 
----
+To start developing the Research Agent today without a massive server:
 
-## 5. Security & Privacy
-*   **Data Scrubbing**: Automatically blur text that looks like PII (names, addresses on shipping labels) before saving to the public dataset.
-*   **License**: Ensure uploaded images are flagged with a Creative Commons license (e.g., CC-BY-SA) to allow open research usage.
+1.  **Install Ollama**: `curl -fsSL https://ollama.com/install.sh`
+2.  **Pull Models**: 
+    *   `ollama run llama3`
+    *   `ollama run llava`
+3.  **Install Qdrant**: `docker run -p 6333:6333 qdrant/qdrant`
+4.  **Connect**: Use the `langchain` library in Python to connect your uploaded images to these local models.
