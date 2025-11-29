@@ -8,15 +8,10 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1z1KMVubb-8YHuVy5mqf4YL9lATmSMVFK
 
-## Try the Demo
 
-Demo moved to [gohbi.github.io/projects/circuit-harvester/](https://gohbi.github.io/projects/circuit-harvester/).
-
-Demos are now centralized in the portfolio repository for easier maintenance and a unified hosting experience.
-
-## Run Locally (Full Version)
 
 **Prerequisites:**  Node.js
+
 
 1. Install dependencies:
    `npm install`

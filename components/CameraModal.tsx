@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { X, Camera } from 'lucide-react';
+import { X, Camera, RefreshCw } from 'lucide-react';
 
 interface CameraModalProps {
   onCapture: (base64Image: string) => void;
