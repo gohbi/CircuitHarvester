@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AnalysisResult, Part } from '../types';
+import { AnalysisResult } from '../types';
 import { Cpu, Zap, AlertTriangle, Lightbulb, Box, Check, Printer, ShoppingCart, X, FileDown } from 'lucide-react';
 
 interface AnalysisDisplayProps {
