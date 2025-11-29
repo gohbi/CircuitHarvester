@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnalysisResult, Part } from '../types';
-import { Cpu, Zap, AlertTriangle, Lightbulb, Box, Check, Printer, ShoppingCart, X, FileText } from 'lucide-react';
+import { Cpu, Zap, AlertTriangle, Lightbulb, Box, Check, Printer, ShoppingCart, X, FileDown } from 'lucide-react';
 
 interface AnalysisDisplayProps {
   result: AnalysisResult;
@@ -24,6 +24,31 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportWord = () => {
+    // Generate a simple HTML document compatible with Microsoft Word
+    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                          xmlns:w='urn:schemas-microsoft-com:office:word' 
+                          xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>Shopping List</title></head><body>`;
+    
+    const footer = "</body></html>";
+    
+    const content = document.getElementById('printable-list')?.innerHTML;
+    
+    if (content) {
+      const sourceHTML = header + content + footer;
+      
+      const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+      
+      const fileDownload = document.createElement("a");
+      document.body.appendChild(fileDownload);
+      fileDownload.href = source;
+      fileDownload.download = `parts-list-${result.deviceName.replace(/\s+/g, '-').toLowerCase()}.doc`;
+      fileDownload.click();
+      document.body.removeChild(fileDownload);
+    }
   };
 
   return (
@@ -194,32 +219,32 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
                   </p>
                 </div>
 
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse" style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr className="border-b-2 border-slate-200">
-                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase">#</th>
-                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase">Component</th>
-                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase">Type / Specs</th>
-                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase w-12 text-center">Chk</th>
+                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase" style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>#</th>
+                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase" style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Component</th>
+                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase" style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>Type / Specs</th>
+                      <th className="py-3 px-2 text-sm font-bold text-slate-500 uppercase w-12 text-center" style={{ textAlign: 'center', borderBottom: '2px solid #e2e8f0' }}>Chk</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedParts.map((part, idx) => (
                       <tr key={idx} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                        <td className="py-4 px-2 font-mono text-slate-400 text-sm">
+                        <td className="py-4 px-2 font-mono text-slate-400 text-sm" style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
                           {idx + 1}
                         </td>
-                        <td className="py-4 px-2">
+                        <td className="py-4 px-2" style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
                           <div className="font-bold text-slate-900">{part.name}</div>
                           <div className="text-sm text-slate-500 mt-1">{part.description}</div>
                         </td>
-                        <td className="py-4 px-2">
+                        <td className="py-4 px-2" style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top' }}>
                           <span className="inline-block px-2 py-1 bg-slate-100 rounded text-xs font-medium text-slate-600 border border-slate-200">
                             {part.type}
                           </span>
                         </td>
-                        <td className="py-4 px-2 text-center">
-                          <div className="w-5 h-5 border-2 border-slate-300 rounded mx-auto" />
+                        <td className="py-4 px-2 text-center" style={{ borderBottom: '1px solid #f1f5f9', verticalAlign: 'top', textAlign: 'center' }}>
+                          <div style={{ width: '20px', height: '20px', border: '2px solid #cbd5e1', borderRadius: '4px', margin: '0 auto' }} />
                         </td>
                       </tr>
                     ))}
@@ -229,23 +254,30 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-between items-center gap-4">
+            <div className="p-6 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-between items-center gap-4">
               <span className="text-sm text-slate-500 hidden sm:inline">
                 {selectedParts.length} items ready for export
               </span>
-              <div className="flex gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap gap-3 w-full sm:w-auto justify-end">
                 <button
                   onClick={() => setShowShoppingList(false)}
-                  className="flex-1 sm:flex-none px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-white hover:border-slate-400 transition-all"
+                  className="px-4 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold hover:bg-white hover:border-slate-400 transition-all text-sm"
                 >
                   Close
                 </button>
                 <button
-                  onClick={handlePrint}
-                  className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2"
+                  onClick={handleExportWord}
+                  className="px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2 text-sm"
                 >
-                  <Printer className="w-5 h-5" />
-                  Print List
+                  <FileDown className="w-4 h-4" />
+                  Export .docx
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="px-4 py-3 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2 text-sm"
+                >
+                  <Printer className="w-4 h-4" />
+                  Print / PDF
                 </button>
               </div>
             </div>
@@ -269,6 +301,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ result }) => {
                 background: white;
                 color: black;
                 padding: 20px;
+                overflow: visible;
               }
               /* Hide scrollbars in print */
               ::-webkit-scrollbar {
