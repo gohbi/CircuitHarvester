@@ -361,7 +361,7 @@
           const fileDownload = document.createElement("a");
           document.body.appendChild(fileDownload);
           fileDownload.href = source;
-          fileDownload.download = 'parts-list-' + result.deviceName.replace(/\\s+/g, '-').toLowerCase() + '.doc';
+          fileDownload.download = 'parts-list-' + result.deviceName.replace(/\s+/g, '-').toLowerCase() + '.doc';
           fileDownload.click();
           document.body.removeChild(fileDownload);
         };
