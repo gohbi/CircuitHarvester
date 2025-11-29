@@ -56,6 +56,15 @@ function App() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const scrollToPart = (index: number) => {
+    const element = document.getElementById(`part-${index}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Optional: Add a temporary highlight effect class if desired,
+      // but the smooth scroll usually provides enough context.
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 selection:bg-emerald-500/30">
       <div className="circuit-pattern fixed inset-0 opacity-20 pointer-events-none" />
@@ -172,11 +181,12 @@ function App() {
                   {state.image && (
                     <AnnotatedImage 
                       imageSrc={state.image} 
-                      parts={state.result.parts} 
+                      parts={state.result.parts}
+                      onPartClick={scrollToPart}
                     />
                   )}
                   <p className="text-xs text-slate-500 mt-3 text-center">
-                    Hover over boxes to identify parts
+                    Click boxes to find details • Hover for names
                   </p>
                 </div>
               </div>

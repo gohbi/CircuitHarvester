@@ -4,9 +4,10 @@ import { Part } from '../types';
 interface AnnotatedImageProps {
   imageSrc: string;
   parts: Part[];
+  onPartClick?: (index: number) => void;
 }
 
-const AnnotatedImage: React.FC<AnnotatedImageProps> = ({ imageSrc, parts }) => {
+const AnnotatedImage: React.FC<AnnotatedImageProps> = ({ imageSrc, parts, onPartClick }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
@@ -31,30 +32,33 @@ const AnnotatedImage: React.FC<AnnotatedImageProps> = ({ imageSrc, parts }) => {
         const isHovered = hoveredIndex === index;
 
         return (
-          <div
+          <button
             key={index}
-            className={`absolute border-2 transition-all duration-300 cursor-help
-              ${isHovered ? 'border-emerald-400 bg-emerald-400/10 z-20' : 'border-emerald-500/60 z-10 hover:border-emerald-400 hover:bg-emerald-400/10'}
+            type="button"
+            onClick={() => onPartClick?.(index)}
+            className={`absolute border-2 transition-all duration-300 cursor-pointer
+              ${isHovered ? 'border-emerald-400 bg-emerald-400/20 z-20' : 'border-emerald-500/60 z-10 hover:border-emerald-400 hover:bg-emerald-400/10'}
             `}
             style={{ top, left, width, height }}
             onMouseEnter={() => setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
+            aria-label={`Select part ${index + 1}: ${part.name}`}
           >
             {/* Number Badge */}
-            <div className={`absolute -top-3 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-              ${isHovered ? 'bg-emerald-400 text-slate-900 scale-110' : 'bg-emerald-600 text-white shadow-lg'}
-              transition-transform`}
+            <div className={`absolute -top-3 -left-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg transition-transform duration-200
+              ${isHovered ? 'bg-emerald-400 text-slate-900 scale-125 z-30' : 'bg-emerald-600 text-white z-20'}
+              `}
             >
               {index + 1}
             </div>
 
             {/* Tooltip on hover */}
-            <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-slate-900/95 text-white text-xs whitespace-nowrap rounded border border-slate-700 shadow-xl pointer-events-none transition-opacity duration-200
+            <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-1.5 bg-slate-900/95 text-white text-xs whitespace-nowrap rounded border border-slate-700 shadow-xl pointer-events-none transition-opacity duration-200 z-30
               ${isHovered ? 'opacity-100' : 'opacity-0'}
             `}>
               <span className="font-bold text-emerald-400">{index + 1}.</span> {part.name}
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
