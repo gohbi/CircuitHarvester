@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AnalysisResult } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Ensure API key is treated as a string to satisfy TypeScript compiler during build
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
 const analysisSchema: Schema = {
   type: Type.OBJECT,
