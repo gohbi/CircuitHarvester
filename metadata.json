@@ -1,0 +1,7 @@
+{
+  "name": "Parts-picker",
+  "description": "Build new things with old toys",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
