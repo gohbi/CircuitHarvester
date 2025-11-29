@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, RotateCcw, Cpu, Loader2, Database } from 'lucide-react';
+import { Camera, Upload, RotateCcw, Cpu, Loader2, Database, ShieldCheck } from 'lucide-react';
 import { AnalysisState } from './types';
 import { analyzeCircuitBoard } from './services/geminiService';
 import { loadSession, saveSession, clearSession } from './services/storageService';
 import { uploadTrainingData } from './services/trainingService';
+import { validateAndSanitizeImage } from './services/imageSecurityService';
 import CameraModal from './components/CameraModal';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import AnnotatedImage from './components/AnnotatedImage';
@@ -41,14 +42,22 @@ function App() {
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const reader = new FileReader();
       
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        processImage(base64String);
-      };
-      
-      reader.readAsDataURL(file);
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      try {
+        // SECURITY STEP: Sanitize image before processing
+        // This strips metadata, scripts, and normalizes the format
+        const cleanBase64 = await validateAndSanitizeImage(file);
+        processImage(cleanBase64);
+      } catch (securityError) {
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: securityError instanceof Error ? securityError.message : "Security check failed."
+        }));
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -164,9 +173,15 @@ function App() {
                   Identify components, learn how they work, and find parts to 
                   harvest for your next project.
                 </p>
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-500 bg-slate-800/50 py-2 px-4 rounded-full w-fit mx-auto border border-slate-700">
-                  <Database className="w-3 h-3" />
-                  Your scans contribute to open-source hardware research
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  <div className="flex items-center gap-2 text-sm text-slate-500 bg-slate-800/50 py-2 px-4 rounded-full border border-slate-700">
+                    <Database className="w-3 h-3" />
+                    <span>Contrib. to Open Research</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-emerald-500/80 bg-emerald-900/10 py-2 px-4 rounded-full border border-emerald-500/20">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Secure Scanning Active</span>
+                  </div>
                 </div>
               </div>
 
@@ -196,13 +211,17 @@ function App() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImageSelect}
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                 />
               </div>
 
               {state.error && (
-                <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-300 max-w-md">
+                <div className="p-4 bg-red-900/20 border border-red-500/50 rounded-lg text-red-300 max-w-md animate-[shake_0.5s_ease-in-out]">
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    <ShieldCheck className="w-5 h-5" />
+                    Security Alert
+                  </div>
                   {state.error}
                 </div>
               )}
@@ -221,6 +240,7 @@ function App() {
               <div className="text-center space-y-2">
                 <h3 className="text-2xl font-bold text-white">Analyzing Circuitry...</h3>
                 <p className="text-slate-400">Identifying components and reading labels</p>
+                <p className="text-xs text-slate-600 mt-4">Running security checks & sanitizing inputs</p>
               </div>
             </div>
           )}
@@ -263,7 +283,7 @@ function App() {
           onClose={() => setShowCamera(false)}
           onCapture={(image) => {
             setShowCamera(false);
-            processImage(image);
+            processImage(image); // Camera modal returns already-drawn canvas data (safe)
           }}
         />
       )}
