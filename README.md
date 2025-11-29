@@ -8,10 +8,21 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/drive/1z1KMVubb-8YHuVy5mqf4YL9lATmSMVFK
 
-## Run Locally
+## Try the Demo
+
+Want to try Circuit Harvester without setting up an API key? Use the standalone demo file:
+
+1. Open `demo.html` in any modern web browser
+2. Click "Load Demo Analysis" to see the app in action
+3. Explore the pre-analyzed Arduino UNO board with component annotations, project ideas, and shopping list features
+
+The demo uses pre-computed analysis data so you can experience the full UI without an API key.
+
+> **Note:** The demo requires an internet connection to load React and TailwindCSS from CDN.
+
+## Run Locally (Full Version)
 
 **Prerequisites:**  Node.js
-
 
 1. Install dependencies:
    `npm install`
