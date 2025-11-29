@@ -111,7 +111,6 @@ describe('Training Service', () => {
           description: 'No bounding box',
           harvestability: 'High',
           projectIdeas: ['Project 1']
-          // No box_2d
         }
       ]
     };
