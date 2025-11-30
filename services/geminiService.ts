@@ -1,8 +1,19 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { AnalysisResult } from "../types";
 
-// Ensure API key is treated as a string to satisfy TypeScript compiler during build
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+// Lazy initialization of AI client to prevent crash on page load when API key is missing
+let ai: GoogleGenAI | null = null;
+
+const getAIClient = (): GoogleGenAI => {
+  if (!ai) {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error("API Key is not configured. Please set the API_KEY environment variable.");
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
 
 const analysisSchema: Schema = {
   type: Type.OBJECT,
@@ -56,7 +67,8 @@ export const analyzeCircuitBoard = async (base64Image: string): Promise<Analysis
   const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
 
   try {
-    const response = await ai.models.generateContent({
+    const client = getAIClient();
+    const response = await client.models.generateContent({
       model: "gemini-2.5-flash",
       contents: {
         parts: [
