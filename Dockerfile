@@ -3,14 +3,19 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package file and install dependencies
-COPY package.json ./
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+# Note: Uses npm install instead of npm ci for cross-platform compatibility
 RUN npm install
 
 # Copy source files
 COPY . .
 
 # Build argument for the API key
+# Note: For Vite/React apps, the API key must be available at build time
+# to be injected into the client-side JavaScript bundle
 ARG API_KEY
 ENV API_KEY=${API_KEY}
 
