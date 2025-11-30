@@ -7,8 +7,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     base: '/CircuitHarvester/',
     define: {
-      // Safely expose the API_KEY from build environment to the code
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Safely expose the GOOGLE_API from build environment to the code
+      'process.env.API_KEY': JSON.stringify(env.GOOGLE_API)
     },
     build: {
       outDir: 'dist',

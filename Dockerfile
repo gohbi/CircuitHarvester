@@ -16,8 +16,8 @@ COPY . .
 # Build argument for the API key
 # Note: For Vite/React apps, the API key must be available at build time
 # to be injected into the client-side JavaScript bundle
-ARG API_KEY
-ENV API_KEY=${API_KEY}
+ARG GOOGLE_API
+ENV GOOGLE_API=${GOOGLE_API}
 
 # Build the application
 RUN npm run build
