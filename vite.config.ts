@@ -5,6 +5,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, (process as any).cwd(), '');
   return {
     plugins: [react()],
+    base: '/CircuitHarvester/',
     define: {
       // Safely expose the API_KEY from build environment to the code
       'process.env.API_KEY': JSON.stringify(env.API_KEY)
