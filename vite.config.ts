@@ -7,7 +7,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     base: '/CircuitHarvester/',
     define: {
-      // Safely expose the GOOGLE_API from build environment to the code
+      // Map GOOGLE_API env var (from GitHub secrets) to process.env.API_KEY
+      // This allows the geminiService.ts to use process.env.API_KEY internally
       'process.env.API_KEY': JSON.stringify(env.GOOGLE_API)
     },
     build: {
